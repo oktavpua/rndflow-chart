@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "rndflow-server.fullname" . }}-pg-rmq-proxy
+  labels:
+    app: {{ include "rndflow-server.fullname" . }}-pg-rmq-proxy
+spec:
+  selector:
+    matchLabels:
+      app: {{ include "rndflow-server.fullname" . }}-pg-rmq-proxy
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: {{ include "rndflow-server.fullname" . }}-pg-rmq-proxy
+    spec:
+      {{ if .Values.config.imagePullSecret }}
+      imagePullSecrets:
+        - name: "{{ .Values.config.imagePullSecret }}"
+      {{ end }}
+      {{ if .Values.config.priorityClassName }}
+      priorityClassName: "{{ .Values.config.priorityClassName }}"
+      {{ end }}
+      containers:
+        - name: rndflow-pg-rmq-proxy
+          image: "{{ .Values.config.registry }}/{{ .Values.pgRmqProxy.image }}"
+          imagePullPolicy: {{.Values.config.imagePullPolicy }}
+          env:
+            - name: PYTHONUNBUFFERED
+              value: "yes"
+            - name: DATABASE_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "rndflow-server.fullname" . }}-secrets
+                  key: databaseUri
+            - name: RABBITMQ_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "rndflow-server.fullname" . }}-secrets
+                  key: rabbitmqUri
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "rndflow-server.fullname" . }}-secrets
+                  key: apiSecret
+          resources:
+{{ toYaml .Values.pgRmqProxy.resources | indent 12 }}
+
+      {{- if .Values.pgRmqProxy.nodeName }}
+      nodeName: "{{ .Values.pgRmqProxy.nodeName }}"
+      {{- end }}
+      {{- if .Values.pgRmqProxy.affinity }}
+      affinity:
+        {{- toYaml .Values.pgRmqProxy.affinity | nindent 8 }}
+      {{- end }}
+      {{- if .Values.pgRmqProxy.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.pgRmqProxy.nodeSelector | nindent 8 }}
+      {{- end }}
+

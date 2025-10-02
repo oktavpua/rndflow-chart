@@ -1,0 +1,212 @@
+# Default values for rndflow-server.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+config:
+  registry:
+  databaseUri:
+  rabbitmqUri:
+  adminEmail:
+
+  logo:
+  leftFooter:
+  rightFooter:
+
+  #imagePullSecret: dockercred
+  # https://kubernetes.io/docs/concepts/containers/images/
+  imagePullPolicy: "IfNotPresent"
+
+  #priorityClassName: "system-cluster-critical"
+
+  #databasePoolSize: 100
+  #databasePoolTimeout: 30
+  #databaseMaxOverflow: 500
+  #databaseEcho: true
+
+  #bot:
+  #  telegram:
+  #    name: 'BOT_NAME'
+  #    token: 'TOKEN'
+  #    timeout: 300
+  #    subscriptionKeyValidity: 300
+
+  #s3:
+    # s3 server cleanup deleted files safe period in days. For minutes use 0.00069 multiplier, for hours - 0.042.
+    #cleanupSafePeriod: 1
+    #pool:
+      # https://urllib3.readthedocs.io/en/stable/reference/urllib3.connectionpool.html
+      #timeout_connect: 60
+      #timeout_read: 300
+      #maxsize: 10
+      # https://docs.python.org/3/library/ssl.html#ssl.wrap_socket
+      #certReqs: 'CERT_NONE'
+      # https://urllib3.readthedocs.io/en/latest/reference/urllib3.util.html#urllib3.util.Retry
+      #retries:
+        #total: 5
+        #backoffFactor: 0.2
+  #options:
+    #useBulkSave: true
+    #useCelerySave: true
+    #checkS3FilesWithDatabase: false
+
+api:
+  replicas: 1
+
+  gunicorn: # https://docs.gunicorn.org/en/stable/settings.html#worker-processes
+    workers: 4
+    #threads:
+    #workerConnections:
+    #maxRequests:
+    #timeout:
+    #gracefulTimeout:
+    #keepalive:
+
+  image: "micanis/api:latest"
+  secret:
+  resources: {}
+  #  requests:
+  #     cpu: 300m
+  #     memory: 500Mi
+  #  limits:
+  #     cpu: 4
+  #     memory: 10Gi
+  #nodeName:
+  #affinity:
+  #nodeSelector:
+  #anyioThreadLimiter: 100
+
+celery:
+  #workers: 1
+  #logLevel: "INFO"
+  databasePoolSize: 2
+  databasePoolTimeout: 30
+  databaseMaxOverflow: 5
+  databaseEcho: false
+  replicas: 1
+  resources: {}
+  #  requests:
+  #     cpu: 100m
+  #     memory: 450Mi
+  #  limits:
+  #     cpu: 1
+  #     memory: 1Gi
+  #nodeName:
+  #affinity:
+  #nodeSelector:
+
+pgRmqProxy:
+  image: "micanis/pg-rmq-proxy:latest"
+  resources: {}
+  #  requests:
+  #     cpu: 100m
+  #     memory: 100Mi
+  #  limits:
+  #     cpu: 1
+  #     memory: 1Gi
+  #nodeName:
+  #affinity:
+  #nodeSelector:
+
+frontend:
+  replicas: 1
+  image: "micanis/client:latest"
+  # Enable root image user  
+  imageRootMode: false
+  apiRedirectMaxFails:
+  apiRedirectFailTimeout:
+  ingress:
+    class: nginx
+    enabled: false
+    hostname:
+    annotations: {}
+    tls:
+    # Secrets must be manually created in the namespace.
+    # - secretName: rndflow-tls
+    #   hosts:
+    #     - rndflow.local
+  service:
+    type: ClusterIP
+    port: 8080
+    clusterIP:
+    nodePort:
+    externalIPs:
+  resources: {}
+  #  requests:
+  #     cpu: 200m
+  #     memory: 200Mi
+  #  limits:
+  #     cpu: 1
+  #     memory: 10Gi
+  init:
+    resources: {}
+    #  requests:
+    #     cpu: 200m
+    #     memory: 200Mi
+    #  limits:
+    #     cpu: 1
+    #     memory: 10Gi
+  #nodeName:
+  #affinity:
+  #nodeSelector:
+
+s3cleanup:
+  enabled: true
+  schedule: "@midnight"
+  resources: {}
+  #  requests:
+  #     cpu: 300m
+  #     memory: 500Mi
+  #  limits:
+  #     cpu: 2
+  #     memory: 2Gi
+
+builder:
+  jobPrefix: "rndflow-builder"
+  image: "micanis/docker-init:latest"
+
+docs:
+  image: "micanis/documentation:latest"
+  resources: {}
+  #  requests:
+  #     cpu: 200m
+  #     memory: 200Mi
+  #  limits:
+  #     cpu: 1
+  #     memory: 1Gi
+  #nodeName:
+  #affinity:
+  #nodeSelector:
+
+tbot:
+  image: "micanis/api:latest"
+  resources: {}
+  #  requests:
+  #     cpu: 200m
+  #     memory: 200Mi
+  #  limits:
+  #     cpu: 1
+  #     memory: 1Gi
+  #nodeName:
+  #affinity:
+  #nodeSelector:
+
+email:
+email:
+  server: "smtp.gmail.com"
+  port: 587
+  tls: true
+  ssl: false
+  use_credentials: true
+  username:
+  password:
+  sender:
+
+hostAliases: []
+#hostAliases:
+##- ip: "10.10.0.1"
+##  hostnames:
+##  - "host1"
+##- ip: "10.100.0.2"
+##  hostnames:
+##  - "host2"
+

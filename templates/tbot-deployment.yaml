@@ -1,0 +1,124 @@
+{{- if .Values.config.bot }}
+{{- if .Values.config.bot.telegram }}
+{{- if and .Values.config.bot.telegram.name .Values.config.bot.telegram.token }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "rndflow-server.fullname" . }}-tbot
+  labels:
+    app: {{ include "rndflow-server.fullname" . }}-tbot
+spec:
+  selector:
+    matchLabels:
+      app: {{ include "rndflow-server.fullname" . }}-tbot
+  replicas: {{ .Values.tbot.replicas }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "rndflow-server.fullname" . }}-tbot
+    spec:
+      {{ if .Values.config.imagePullSecret }}
+      imagePullSecrets:
+        - name: "{{ .Values.config.imagePullSecret }}"
+      {{ end }}
+      {{ if .Values.config.priorityClassName }}
+      priorityClassName: "{{ .Values.config.priorityClassName }}"
+      {{ end }}
+      containers:
+        - name: rndflow-tbot
+          image: "{{ .Values.config.registry }}/{{ .Values.tbot.image }}"
+          imagePullPolicy: {{ .Values.config.imagePullPolicy }}
+          command:
+            - './boot-tbot.sh'
+          env:
+            {{ if .Values.config.databasePoolSize }}
+            - name: DATABASE_POOL_SIZE
+              value: "{{ .Values.config.databasePoolSize }}"
+            {{ end }}
+            {{ if .Values.config.databaseMaxOverflow }}
+            - name: DATABASE_MAX_OVERFLOW
+              value: "{{ .Values.config.databaseMaxOverflow }}"
+            {{ end }}
+            {{ if .Values.config.databaseEcho }}
+            - name: DATABASE_ECHO
+              value: "{{ .Values.config.databaseEcho }}"
+            {{ end }}
+            
+            {{ if .Values.config.bot.telegram.name }}
+            - name: TELEGRAM_BOT_NAME
+              value: "{{ .Values.config.bot.telegram.name }}"
+            {{ end }}
+            {{ if .Values.config.bot.telegram.token }}
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "rndflow-server.fullname" . }}-secrets
+                  key: telegramBotToken
+            {{ end }}
+            {{ if .Values.config.bot.telegram.timeout }}
+            - name: TELEGRAM_BOT_TIMEOUT
+              value: "{{ .Values.config.bot.telegram.timeout }}"
+            {{ end }}
+            {{ if .Values.config.bot.telegram.subscriptionKeyValidity }}
+            - name: TELEGRAM_BOT_SUBSCRIPTION_KEY_VALIDITY
+              value: "{{ .Values.config.bot.telegram.subscriptionKeyValidity }}"
+            {{ end }}
+
+            - name: DATABASE_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "rndflow-server.fullname" . }}-secrets
+                  key: databaseUri
+            - name: RABBITMQ_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "rndflow-server.fullname" . }}-secrets
+                  key: rabbitmqUri
+            - name: ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "rndflow-server.fullname" . }}-secrets
+                  key: adminEmail
+            - name: AUTHJWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "rndflow-server.fullname" . }}-secrets
+                  key: apiSecret
+            - name: MAIL_SERVER
+              value: {{  required ".Values.email.server is required" .Values.email.server }}
+            - name: MAIL_PORT
+              value: {{  required ".Values.email.port is required" .Values.email.port | quote }}
+            - name: MAIL_TLS
+              value: {{  required ".Values.email.tls is required" .Values.email.tls | quote }}
+            - name: MAIL_FROM
+              value: {{  required ".Values.email.sender is required" .Values.email.sender }}
+            - name: MAIL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "rndflow-server.fullname" . }}-secrets
+                  key: email_username
+            - name: MAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "rndflow-server.fullname" . }}-secrets
+                  key: email_password
+          resources:
+{{ toYaml .Values.tbot.resources | indent 12 }}
+          ports:
+            - name: http
+              containerPort: 8000
+
+      {{- if .Values.tbot.nodeName }}
+      nodeName: "{{ .Values.tbot.nodeName }}"
+      {{- end }}
+      {{- if .Values.tbot.affinity }}
+      affinity:
+        {{- toYaml .Values.tbot.affinity | nindent 8 }}
+      {{- end }}
+      {{- if .Values.tbot.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.tbot.nodeSelector | nindent 8 }}
+      {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

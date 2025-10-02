@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  rndflow-server:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2025-10-02T10:53:40.190067994+03:00"
+    description: A Helm chart for Kubernetes
+    digest: d769d460cf1dd3e145c8059833774223e3b3f975c6fc02275439ef675e59e6d0
+    name: rndflow-server
+    type: application
+    urls:
+    - https://ghcr.io/oktavpua/rndflow-server/rndflow-server-0.1.0.tgz
+    version: 0.1.0
+generated: "2025-10-02T10:53:40.18903277+03:00"
