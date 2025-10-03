@@ -52,7 +52,7 @@ spec:
 {{ toYaml .Values.frontend.resources | indent 12 }}
       initContainers:
         - name: check-api
-          image: curlimages/curl
+          image: docker.io/curlimages/curl
           imagePullPolicy: {{.Values.config.imagePullPolicy }}
           command: ['curl', '--retry-all-errors', '--retry', '100', '--retry-delay', '1', 'http://{{ include "rndflow-server.fullname" . }}-api-svc:8000/status']
           resources:
